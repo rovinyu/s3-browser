@@ -13,6 +13,10 @@ def getFilesAndFolderOfBucket(strBucket,strPrefix):
     if (sesFolder.get('Contents')!=None):
         for key in sesFolder.get('Contents'):
             vecFiles.append(key['Key'])
+    print("vecFiles: ", end = '')
+    print(vecFiles)
+    print("vecFolders: ", end = '')
+    print(vecFolders)    
 
     return (vecFiles,vecFolders)
 
@@ -25,7 +29,7 @@ def uploadIndexFile(strBucket,strPrefix,strIndexFile):
 def generateIndexFile(strBucket,strPrefix,strIndexFile,vecFiles,vecFolders,strTemplate):
     with open(strTemplate) as inf:
         txt = inf.read()
-        soup = bs4.BeautifulSoup(txt)
+        soup = bs4.BeautifulSoup(txt, features="html5lib")
 
     tagKeysList = soup.find("ul", {"id": "listkeys"})
 
@@ -69,9 +73,10 @@ def generateHeader(soup,strBucket,strPrefix):
     tagH = soup.new_tag("h4")
     tagH.string = 's3://' + strBucket + '/' + strPrefix
     tagHeader.append(tagH)
+    print(tagHeader)
     return tagHeader
 
-strBucket = ''
+strBucket = 'gbsorting'
 strPrefix = ''
 strIndexFile = 'index.html'
 strTemplate = 'index_template.html'
