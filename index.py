@@ -76,7 +76,16 @@ def generateHeader(soup,strBucket,strPrefix):
     tagHeader = soup.new_tag("li", **{'class': 'collection-header'})
     tagH = soup.new_tag("h4")
     if strPrefix:
-        tagH.string = strPrefix.strip('/')
+        strText = strPrefix.strip('/')
+        sList = strPrefix.split('/')
+        if len(sList) <= 2:
+            strURL = '/index.html'
+        else:
+            upLevel = '/'.join(sList[:-2])
+            strURL = '/' + upLevel + '/index.html'
+        tagA = soup.new_tag("a", href=strURL)
+        tagA.string = strText
+        tagH.append(tagA)
     else:
         tagH.string = u'欢迎来到Rovin的小站'
     tagHeader.append(tagH)
