@@ -1,6 +1,7 @@
 import boto3
 from boto3 import client
 import bs4
+import os
 
 def getFilesAndFolderOfBucket(strBucket,strPrefix):
     conn = client('s3')
@@ -16,7 +17,7 @@ def getFilesAndFolderOfBucket(strBucket,strPrefix):
     print("vecFiles: ", end = '')
     print(vecFiles)
     print("vecFolders: ", end = '')
-    print(vecFolders)    
+    print(vecFolders)
 
     return (vecFiles,vecFolders)
 
@@ -39,8 +40,11 @@ def generateIndexFile(strBucket,strPrefix,strIndexFile,vecFiles,vecFolders,strTe
         strFolderLast = strFolder.split('/')[-2]
         tagKeysList.append(generateElement(soup, True, strFolderLast, '/' + strFolder + 'index.html'))
 
+    vecFiles.sort(reverse = True)
     for strFile in vecFiles:
         strFileLast = strFile.split('/')[-1]
+        if strFileLast == 'index.html' or strFileLast == '':
+            continue
         tagKeysList.append(generateElement(soup, False, strFileLast, '/' + strFile))
 
     with open(strIndexFile, "w") as outf:
@@ -71,14 +75,38 @@ def generateElement(soup,flagIsFolder,strText,strURL):
 def generateHeader(soup,strBucket,strPrefix):
     tagHeader = soup.new_tag("li", **{'class': 'collection-header'})
     tagH = soup.new_tag("h4")
-    tagH.string = 's3://' + strBucket + '/' + strPrefix
+    if strPrefix:
+        tagH.string = strPrefix.strip('/')
+    else:
+        tagH.string = u'欢迎来到Rovin的小站'
     tagHeader.append(tagH)
     print(tagHeader)
     return tagHeader
 
-strBucket = 'gbsorting'
-strPrefix = ''
-strIndexFile = 'index.html'
-strTemplate = 'index_template.html'
+def uploadFundRankFile(strBucket,strPrefix,strIndexFile):
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(strBucket)
+    bucket.upload_file(strIndexFile, strPrefix + strIndexFile,
+                       ExtraArgs={'ACL': 'public-read'})
 
-recPopulateIndexFiles(strBucket,strPrefix,strTemplate)
+def uploadFundRankfiles(localPath, strBucket, strPrefix):
+    currDir = os.getcwd()
+    os.chdir(localPath)
+    fileList = os.listdir(localPath)
+    (vecFiles, vecFolders) = getFilesAndFolderOfBucket(strBucket, strPrefix)
+    for file in fileList:
+        if strPrefix+file not in vecFiles:
+            uploadFundRankFile(strBucket, strPrefix, file)
+    os.chdir(currDir)
+
+
+if __name__ == '__main__':
+    strBucket = 'fundrank'
+    strPrefix = ''
+    strIndexFile = 'index.html'
+    strTemplate = 'index_template.html'
+    localPath = u'/Users/rovin/Documents/基金数据'
+
+    uploadFundRankfiles(localPath, strBucket, '基金排名/')
+
+    recPopulateIndexFiles(strBucket, strPrefix, strTemplate)
