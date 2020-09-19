@@ -87,25 +87,25 @@ def generateHeader(soup,strBucket,strPrefix):
         tagA.string = strText
         tagH.append(tagA)
     else:
-        tagH.string = u'欢迎来到Rovin的小站'
+        tagH.string = u'欢迎来到Rovin的基金驿站'
     tagHeader.append(tagH)
     print(tagHeader)
     return tagHeader
 
-def uploadFundRankFile(strBucket,strPrefix,strIndexFile):
+def uploadFundFile(strBucket,strPrefix,strIndexFile):
     s3 = boto3.resource('s3')
     bucket = s3.Bucket(strBucket)
     bucket.upload_file(strIndexFile, strPrefix + strIndexFile,
                        ExtraArgs={'ACL': 'public-read'})
 
-def uploadFundRankfiles(localPath, strBucket, strPrefix):
+def uploadFundfiles(localPath, strBucket, strPrefix):
     currDir = os.getcwd()
     os.chdir(localPath)
     fileList = os.listdir(localPath)
     (vecFiles, vecFolders) = getFilesAndFolderOfBucket(strBucket, strPrefix)
     for file in fileList:
         if strPrefix+file not in vecFiles:
-            uploadFundRankFile(strBucket, strPrefix, file)
+            uploadFundFile(strBucket, strPrefix, file)
     os.chdir(currDir)
 
 
@@ -114,8 +114,8 @@ if __name__ == '__main__':
     strPrefix = ''
     strIndexFile = 'index.html'
     strTemplate = 'index_template.html'
-    localPath = u'/Users/rovin/Documents/基金数据'
 
-    uploadFundRankfiles(localPath, strBucket, '基金排名/')
+    uploadFundfiles(u'/Users/rovin/Documents/基金数据/rank', strBucket, '基金排名/')
+    uploadFundfiles(u'/Users/rovin/Documents/基金数据/data', strBucket, '基金数据/')
 
     recPopulateIndexFiles(strBucket, strPrefix, strTemplate)
